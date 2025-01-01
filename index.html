@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastreo de IP</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+
+    <div class="container">
+        <h1>Rastreo de IP</h1>
+        <input type="text" id="ipInput" placeholder="Ingresa una IP" />
+        <button onclick="trackIP()">Rastrear</button>
+        
+        <div id="result">
+            <p><strong>IP:</strong> <span id="ip"></span></p>
+            <p><strong>Ciudad:</strong> <span id="city"></span></p>
+            <p><strong>País:</strong> <span id="country"></span></p>
+            <p><strong>Latitud:</strong> <span id="lat"></span></p>
+            <p><strong>Longitud:</strong> <span id="lon"></span></p>
+            <p><strong>Proveedor de Internet:</strong> <span id="isp"></span></p>
+        </div>
+
+        <div id="map" style="height: 400px; margin-top: 20px;"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</body>
+</html>
