@@ -1,32 +1,311 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rastreo de IP</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rastrea la IP en el Mapa</title>
+  <!-- Iconos Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- CSS para Leaflet (Mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    /* General Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      transition: background-color 0.3s ease;
+      background-size: 400% 400%;
+      animation: gradientBg 8s ease infinite;
+    }
+
+    @keyframes gradientBg {
+      0% { background: #6a11cb; }
+      50% { background: #2575fc; }
+      100% { background: #6a11cb; }
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
+
+    h1 {
+      font-size: 26px;
+      color: #333;
+      margin-bottom: 25px;
+      font-weight: 700;
+      animation: slideUp 1s forwards;
+    }
+
+    input {
+      padding: 15px;
+      font-size: 18px;
+      width: 100%;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      border: 2px solid #ddd;
+      outline: none;
+      transition: border 0.3s, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+      border: 2px solid #4CAF50;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 28px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 12px 0;
+      width: 100%;
+      transition: all 0.3s ease-in-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    button i {
+      margin-right: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-5px);
+      background-color: #45a049;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+      transform: translateY(2px);
+    }
+
+    /* Botones específicos */
+    .btn-public-ip { background-color: #2196F3; }
+    .btn-public-ip:hover { background-color: #1976D2; }
+    .btn-history { background-color: #FF9800; }
+    .btn-history:hover { background-color: #FB8C00; }
+    .btn-reset { background-color: #f44336; }
+    .btn-reset:hover { background-color: #d32f2f; }
+    .btn-copy { background-color: #2196F3; }
+    .btn-copy:hover { background-color: #1976D2; }
+    .btn-details { background-color: #FFC107; }
+    .btn-details:hover { background-color: #FFB300; }
+
+    #ip-result, #location-result, #lat-result, #lon-result, #city-result, #region-result, #country-result {
+      font-size: 18px;
+      color: #333;
+      margin-top: 20px;
+      opacity: 0;
+      animation: slideUp 1s 1.5s forwards;
+    }
+
+    #additional-info {
+      margin-top: 30px;
+      text-align: left;
+      font-size: 16px;
+      opacity: 0;
+      animation: fadeIn 1s 2s forwards;
+    }
+
+    #map {
+      margin-top: 20px;
+      height: 400px;
+      border-radius: 8px;
+      opacity: 0;
+      animation: slideIn 1s 2s forwards;
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      0% { transform: translateY(50px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      0% { opacity: 0; transform: translateY(100px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Créditos */
+    .credits {
+      margin-top: 50px;
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .credits a {
+      color: #2196F3;
+      text-decoration: none;
+    }
+
+    .credits a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Rastreo de IP</h1>
-        <input type="text" id="ipInput" placeholder="Ingresa una IP" />
-        <button onclick="trackIP()">Rastrear</button>
-        
-        <div id="result">
-            <p><strong>IP:</strong> <span id="ip"></span></p>
-            <p><strong>Ciudad:</strong> <span id="city"></span></p>
-            <p><strong>País:</strong> <span id="country"></span></p>
-            <p><strong>Latitud:</strong> <span id="lat"></span></p>
-            <p><strong>Longitud:</strong> <span id="lon"></span></p>
-            <p><strong>Proveedor de Internet:</strong> <span id="isp"></span></p>
-        </div>
+  <div class="container">
+    <h1>Rastrea una IP en el Mapa</h1>
+    
+    <!-- Campo de entrada para la IP -->
+    <input type="text" id="input-ip" placeholder="Ingresa una IP" />
 
-        <div id="map" style="height: 400px; margin-top: 20px;"></div>
+    <!-- Botones -->
+    <button class="btn" onclick="searchIP()"><i class="fas fa-search"></i> Buscar IP</button>
+    <button class="btn btn-public-ip" onclick="getPublicIP()"><i class="fas fa-globe-americas"></i> Ver IP Pública</button>
+    <button class="btn btn-history" onclick="showHistory()"><i class="fas fa-history"></i> Ver Historial</button>
+    <button class="btn btn-reset" onclick="resetMap()"><i class="fas fa-undo"></i> Resetear</button>
+    <button class="btn btn-copy" onclick="copyIP()"><i class="fas fa-copy"></i> Copiar IP</button>
+    <button class="btn btn-details" onclick="toggleDetails()"><i class="fas fa-info-circle"></i> Ver Detalles</button>
+
+    <!-- Resultados de la búsqueda -->
+    <p id="ip-result">IP: Cargando...</p>
+    <p id="location-result">Ubicación: Cargando...</p>
+    <div id="additional-info" style="display: none;">
+      <p id="lat-result">Latitud: </p>
+      <p id="lon-result">Longitud: </p>
+      <p id="city-result">Ciudad: </p>
+      <p id="region-result">Región: </p>
+      <p id="country-result">País: </p>
     </div>
+    
+    <!-- Contenedor para el mapa -->
+    <div id="map" style="height: 400px;"></div>
+  </div>
 
-    <script src="script.js"></script>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Créditos -->
+  <div class="credits">
+    <p>API utilizada: <a href="https://ip-api.com" target="_blank">ip-api.com</a></p>
+    <p>Desarrollado por: <a href="https://github.com/tu-perfil" target="_blank">Tu Perfil</a></p>
+  </div>
+
+  <!-- JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    let map, marker;
+    let history = [];
+
+    function searchIP() {
+      const ip = document.getElementById('input-ip').value.trim();
+      if (!ip) return alert("Por favor ingresa una IP");
+
+      fetch(`http://ip-api.com/json/${ip}?fields=lat,lon,city,regionName,country`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "fail") {
+            alert("IP no encontrada");
+            return;
+          }
+          
+          const { lat, lon, city, regionName, country } = data;
+          const location = `${city}, ${regionName}, ${country}`;
+          
+          // Mostrar resultados
+          document.getElementById('ip-result').textContent = `IP: ${ip}`;
+          document.getElementById('location-result').textContent = `Ubicación: ${location}`;
+          document.getElementById('lat-result').textContent = `Latitud: ${lat}`;
+          document.getElementById('lon-result').textContent = `Longitud: ${lon}`;
+          document.getElementById('city-result').textContent = `Ciudad: ${city}`;
+          document.getElementById('region-result').textContent = `Región: ${regionName}`;
+          document.getElementById('country-result').textContent = `País: ${country}`;
+
+          // Mostrar mapa
+          if (!map) {
+            map = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+          } else {
+            map.setView([lat, lon], 13);
+          }
+
+          if (marker) {
+            marker.setLatLng([lat, lon]);
+          } else {
+            marker = L.marker([lat, lon]).addTo(map);
+          }
+
+          marker.bindPopup(`<b>Ubicación:</b> ${location}`).openPopup();
+
+          // Agregar al historial
+          history.push(ip);
+        })
+        .catch(err => alert("Error al obtener datos: " + err));
+    }
+
+    function getPublicIP() {
+      fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+          alert(`Tu IP Pública es: ${data.ip}`);
+        })
+        .catch(err => alert("Error al obtener la IP pública"));
+    }
+
+    function showHistory() {
+      alert("Historial de IPs rastreadas:\n" + history.join("\n"));
+    }
+
+    function toggleDetails() {
+      const infoDiv = document.getElementById('additional-info');
+      infoDiv.style.display = (infoDiv.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function copyIP() {
+      const ip = document.getElementById('ip-result').textContent.split(': ')[1];
+      navigator.clipboard.writeText(ip).then(() => {
+        alert('IP copiada al portapapeles');
+      }).catch(err => {
+        alert('Error al copiar IP: ' + err);
+      });
+    }
+
+    function resetMap() {
+      // Limpiar resultados y mapa
+      document.getElementById('input-ip').value = '';
+      document.getElementById('ip-result').textContent = 'IP: Cargando...';
+      document.getElementById('location-result').textContent = 'Ubicación: Cargando...';
+      document.getElementById('additional-info').style.display = 'none';
+      document.getElementById('map').style.display = 'none';
+
+      if (map) {
+        map.remove();
+        map = null;
+      }
+
+      history = [];
+    }
+  </script>
 </body>
 </html>
