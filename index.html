@@ -54,11 +54,12 @@
 </div>
 
 <script>
+    // Función para manejar el login
     function login() {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        // Aquí puedes agregar la lógica de autenticación, por ahora es un ejemplo simple
+        // Aquí puedes agregar tu lógica de autenticación (esto es un ejemplo)
         if (username === 'admin' && password === '1234') {
             alert('Inicio de sesión exitoso');
             window.location.href = 'about:blank'; // Cierra la página de login
@@ -68,8 +69,9 @@
         }
     }
 
+    // Función para manejar el registro
     function register() {
-        // Lógica de registro (por ahora solo muestra un mensaje)
+        // Lógica de registro (aquí solo muestra un mensaje)
         alert('Registrado con éxito');
         window.location.href = 'about:blank'; // Cierra la página de registro
         window.external.notify('register_successful'); // Notifica a la app WinForms
@@ -78,4 +80,3 @@
 
 </body>
 </html>
-
